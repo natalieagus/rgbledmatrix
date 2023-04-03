@@ -1,3 +1,7 @@
+// Note that this module is meant for 2/N scan rate only, where N is the number of rows
+// e.g: for 32 by 64, scan rate of 1:16 required
+// e.g: for 16 by 32, scan rate of 1:8 required
+// Will not work for 16 by 32, 1:4 scan rate (p10)
 module matrix_writer #(
   // 32 by 64 LED matrix, separated into top-16 rows and bottom 16-rows
   // both halves row i are written together for all rows 0 to 15 in a rapid loop 
