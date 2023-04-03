@@ -25,6 +25,7 @@ module au_top (
   
   sig rst;                  // reset signal
   
+  // ramwriter ---> matrixram ---> matrixwriter ---> hardware
   matrix_writer matrixwriter(.clk(clk), .rst(rst));
   ram_writer ramwriter(#DATA_WIDTH(16), .clk(clk), .rst(rst));
   matrix_ram matrixram(.clk(clk), .rst(rst));
