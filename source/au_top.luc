@@ -26,7 +26,8 @@ module au_top (
   sig rst;                  // reset signal
   
   matrix_writer matrixwriter(.clk(clk), .rst(rst));
-
+  ram_writer ramwriter(#DATA_WIDTH(16), .clk(clk), .rst(rst));
+  matrix_ram matrixram(.clk(clk), .rst(rst));
   
   dff row_index[8](.clk(clk));
   dff col_index[8](.clk(clk));
@@ -42,8 +43,7 @@ module au_top (
   always {
     reset_cond.in = ~rst_n; // input raw inverted reset signal
     rst = reset_cond.out;   // conditioned reset
-    reload_button_cond.in = io_button[0];
-    reload_button_edge_detector.in = reload_button_cond.out;
+
     
     usb_tx = usb_rx;        // loop serial port
     
@@ -53,9 +53,33 @@ module au_top (
     io_seg = 8hff;          // turn segments off
     io_sel = 4hf;           // select no digits
 
-
-    matrixwriter.data = 6b100100; // Turns all pixels blue. Change to the output of some RAM unit 
-
+    // ------ CUSTOM DATA LOADING, prepare some data to be loaded to matrix_ram ------- // 
+    // connect ramwriter to matrixram to load it with some pixel values 
+    reload_button_cond.in = io_button[0]; // this button reloads new value from io_dip
+    reload_button_edge_detector.in = reload_button_cond.out;
+    ramwriter.reload = reload_button_edge_detector.out; 
+    
+    // when io_button[0] is pressed, we supply this 6 bit new data
+    ramwriter.new_data = {c{io_dip[2], io_dip[2]}, c{io_dip[1], io_dip[1]}, c{io_dip[0], io_dip[0]}}; // replace this from reg content from CPU
+    
+    matrixram.row_address_top = ramwriter.row_address_top;
+    matrixram.col_address_top = ramwriter.col_address_top;
+    matrixram.we_top = ramwriter.we_top;
+    matrixram.wd_top = ramwriter.wd_top;
+    
+    matrixram.row_address_btm = ramwriter.row_address_btm;
+    matrixram.col_address_btm = ramwriter.col_address_btm;
+    matrixram.we_btm = ramwriter.we_btm;
+    matrixram.wd_btm = ramwriter.wd_btm;
+    
+    matrixram.ready = ramwriter.ready;
+    
+    matrixram.row_address = matrixwriter.row_index;
+    matrixram.col_address = matrixwriter.col_index;
+  
+    // connect matrixram with matrixwriter to push the pixel values out to the matrix
+    matrixwriter.data = c{matrixram.bottom_out, matrixram.top_out};
+    // ------ END of CUSTOM data LOADING ------- // 
   
     red0 = matrixwriter.red0;
     red1 = matrixwriter.red1;
@@ -77,6 +101,8 @@ module au_top (
     io_led[0][4] = matrixwriter.green1;
     io_led[0][5] = matrixwriter.blue1;
     
+    io_led[0][2:0] = matrixram.top_out;
+    io_led[0][5:3] = matrixram.bottom_out;
     
     if (matrixwriter.row_index != 0){
       row_index.d = matrixwriter.row_index;
