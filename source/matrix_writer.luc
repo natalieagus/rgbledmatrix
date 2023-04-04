@@ -45,21 +45,16 @@ module matrix_writer #(
           // b10 && sclk == all1s: blank OFF, go to b01
           dff state[2]; //to remember whether loading or displaying 
           
-      
           dff sclk_counter[DIV]; // clock to load shift register, whenever sclk_counter == DIVx{b1} that's the cycle of shift reg clk
           dff led_bit_counter[$clog2(MATRIX_WIDTH)+1]; // counter to keep track which of the 64 bits of LED is currently loaded 
           dff current_address[ADDRESS_SIZE]; // pointer of the current row address of the matrix, used when LATCH is 1 OR BLANK = 0
-      
         
           dff debug_dff[16]; // register for debugging
-          
-          
+
           // registers to store data out
           dff rgb_data[6]; // b1g1r1b0g0r0
           dff sclk; // clk signal to shift register
           dff latch_blank[2]; // [0] MSB is latch value, [1] LSB is blank value
-      
-            
     }
     
   }
@@ -90,8 +85,6 @@ module matrix_writer #(
     // internal counter to keep track what value we should give to shift register's clock sclk
     sclk_counter.d = sclk_counter.q + 1; // increase shift register clock 
     
-    
-    
     if (state.q == b00){ // START state
       latch_blank.d = b01; // latch off, blank on, begin 
       current_address.d = ADDRESS_SIZEx{b1}; // start from address 1111 
@@ -102,10 +95,8 @@ module matrix_writer #(
       state.d = b01;
     }
     
-    
     // loading data when sclk is all 0 
     if (sclk_counter.q == DIVx{b0} && state.q == b01 && led_bit_counter.q <= MATRIX_WIDTH){
-      
       // off clock when changing data 
       sclk.d = 0;
       
@@ -115,7 +106,6 @@ module matrix_writer #(
      
       // shift the index to go to next LED in the row 
       led_bit_counter.d = led_bit_counter.q + 1;
-      
     }
     
     // data load to rgb_data, given by input 'data' from simple ram that's available from the previous cycle's address
@@ -124,8 +114,6 @@ module matrix_writer #(
         rgb_data.d = data;
      }
       
-      
-    
     // change rising clock for shift registers in matrix to load input data in the second half of sclk_counter cycle
     else if (sclk_counter.q == (DIV-1)x{b1} && state.q == b01){
       sclk.d = 1;
@@ -155,8 +143,5 @@ module matrix_writer #(
       
       state.d = b01;
     }
-
-
-    
   }
 }
