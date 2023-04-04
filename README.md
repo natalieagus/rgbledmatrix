@@ -68,3 +68,7 @@ If you're using a RAM to drive the `matrix_writer`, you may use its output: `row
 ## Sample with RAM
 
 You may checkout the branch `matrix-with-ram` to see how we use a `ram_writer` to write into `matrix_ram`, which then be connected to `matrix_driver`. Note that the sample is unique to your own usage and you need to read the sample code to understand what you see.
+
+Here's what you should see when you run it on 64x64 matrix:
+
+![matrix](images/matrix.png)
