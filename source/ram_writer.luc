@@ -113,7 +113,7 @@ module ram_writer #(
         writer_state.d = writer_state.LOAD_WAIT;
         if (&bitloader.q == 1){
             // advance bottom col for next time
-            data_bottom_col_address.d = data_bottom_col_address + 1;
+            data_bottom_col_address.d = data_bottom_col_address.q + 1;
             bitloader.d = 0;
             writer_state.d = writer_state.LOOP;
         }
