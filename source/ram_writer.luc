@@ -80,6 +80,8 @@ module ram_writer #(
     wd_top = 0;
     wd_btm = 0;
     
+
+    
     case(writer_state.q){
       writer_state.START:
         data.d = START_DATA;
@@ -115,16 +117,18 @@ module ram_writer #(
             bitloader.d = 0;
             writer_state.d = writer_state.LOOP;
         }
+        
+        // advance row after bottom address has reach all 1
+        // this cant go to LOAD_WAIT because it is possible that we don't go to LOAD WAIT but LOOP instead when data_bottom_col_address is all 1
+        if (&data_bottom_col_address.q){
+             data_bottom_row_address.d = data_bottom_row_address.q + 1;
+        }
       
       writer_state.LOAD_WAIT:
         //advance write address by 1
         bitloader.d = bitloader.q + 1;
         data_bottom_col_address.d = data_bottom_col_address.q + 1;
-        
-        // advance row after bottom address has reach all 1
-        if (&data_bottom_col_address.q){
-          data_bottom_row_address.d = data_bottom_row_address.q + 1;
-        }
+       
         writer_state.d = writer_state.LOAD_ADDRESS;
      
       writer_state.LOOP:
@@ -133,9 +137,7 @@ module ram_writer #(
         writer_state.d = writer_state.LOOP;
         if (reload){
            // advance bottom col for next time
-            data_bottom_col_address.d = data_bottom_col_address.q + 1;
-           // reset to load from bit 0 again
-           bitloader.d = 0;
+           data_bottom_col_address.d = data_bottom_col_address.q + 1;
            data.d = new_data;
            writer_state.d = writer_state.LOAD_ADDRESS;
         }
