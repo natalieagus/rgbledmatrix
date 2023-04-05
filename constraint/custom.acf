@@ -33,6 +33,7 @@ pin address[0] C3;
 pin address[1] C6;
 pin address[2] C9;
 pin address[3] C12;
+pin address[4] C15;
 
 
 // Alchitry Io
