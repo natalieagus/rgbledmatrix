@@ -63,7 +63,6 @@ module ram_writer #(
     dff bitloader[$clog2(DATA_WIDTH)](#INIT(0), .clk(clk), .rst(rst));
   
     dff data[DATA_SET][DATA_WIDTH](.clk(clk), .rst(rst)); 
-
   
     dff data_bottom_col_address[$clog2(MATRIX_WIDTH)](#INIT(0),.clk(clk),.rst(rst));
     dff data_bottom_row_address[ADDRESS_SIZE](#INIT(0),.clk(clk),.rst(rst));
@@ -80,8 +79,6 @@ module ram_writer #(
     col_address_btm = 0;
     wd_top = 0;
     wd_btm = 0;
-    
- 
     
     case(writer_state.q){
       writer_state.START:
@@ -115,6 +112,8 @@ module ram_writer #(
         we_btm = b1;
         writer_state.d = writer_state.LOAD_WAIT;
         if (&bitloader.q == 1){
+            // advance bottom col for next time
+            data_bottom_col_address.d = data_bottom_col_address + 1;
             bitloader.d = 0;
             writer_state.d = writer_state.LOOP;
         }
