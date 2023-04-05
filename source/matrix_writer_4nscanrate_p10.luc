@@ -1,0 +1,71 @@
+module matrix_writer_4nscanrate_p10 #(
+  // default: 16 by 32 LED matrix, separated into top-8 rows and bottom 8-rows
+  // both halves row i are written together for all rows 0 to 15 in a rapid loop 
+  ADDRESS_SIZE = 3 : ADDRESS_SIZE > 0, //width of the address field (ABCD signals for matrix_led) 
+  MATRIX_WIDTH = 32 : MATRIX_WIDTH > 0, //number of LEDs per row in the matrix
+  ROW_OFFSET = 4 : ROW_OFFSET > 0 // distance between parallel rows in both top half and bottom half
+  )(
+    input clk,  // clock
+    input rst,  // reset
+    input data[6], // input data from a simple RAM [b1,g1,r1,b0,g0,r0], see sample data below
+    
+    // addresses to a simple RAM 
+    output col_index[$clog2(MATRIX_WIDTH)],
+    output row_index[ADDRESS_SIZE],
+    
+    // output to matrix 
+    output red0,
+    output green0, 
+    output blue0,
+    output red1,
+    output green1,
+    output blue1,
+    output latch, 
+    output blank, // also known as OE
+    output sclk_out,
+    output address[ADDRESS_SIZE], // address[ADDRESS_SIZE] is unused
+    
+    // for debug, you can delete this if not needed
+    output debug[16]
+
+  ) {
+
+  // ramwriter ---> matrixram ---> matrixwriter ---> hardware
+  matrix_writer_4nscanrate matrixwriter(.clk(clk), .rst(rst));
+  
+  // this mapping is specific to p10 32x16 matrix (1:4 scan rate)
+  // COL_MAPPING[i] indicates where the physical column index i should map in the matrix_ram 
+  // matrix_ram assumes physical arrangement of LEDs to match the logical arrangement, eg: top is 8 by 32, bottom is 8 by 32 
+  // COL_MAPPING[8] gives you 5d0, which means that physical col index 8 corresponds to logical column index 0 (but row i+4)
+  const COL_MAPPING = {
+    5d31,5d30,5d29,5d28,5d27,5d26,5d25,5d24,
+    5d31,5d30,5d29,5d28,5d27,5d26,5d25,5d24,
+    5d23,5d22,5d21,5d20,5d19,5d18,5d17,5d16,
+    5d23,5d22,5d21,5d20,5d19,5d18,5d17,5d16,
+    5d15,5d14,5d13,5d12,5d11,5d10,5d9,5d8,
+    5d15,5d14,5d13,5d12,5d11,5d10,5d9,5d8,
+    5d7,5d6,5d5,5d4,5d3,5d2,5d1,5d0,
+    5d7,5d6,5d5,5d4,5d3,5d2,5d1,5d0
+  };
+  
+  always {
+    red0 = matrixwriter.red0;
+    red1 = matrixwriter.red1;
+    green0 = matrixwriter.green0;
+    green1 = matrixwriter.green1;
+    blue0 = matrixwriter.blue0;
+    blue1 = matrixwriter.blue1;
+    latch = matrixwriter.latch;
+    sclk_out = matrixwriter.sclk_out;
+    blank = matrixwriter.blank;
+    address = matrixwriter.address;
+    
+    debug = matrixwriter.debug;
+    col_index = matrixwriter.col_index;
+    row_index = matrixwriter.row_index;
+    
+    matrixwriter.data = data;
+    matrixwriter.mapped_ram_column = COL_MAPPING[matrixwriter.actual_col_index];
+    
+  }
+}

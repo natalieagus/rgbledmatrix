@@ -34,29 +34,49 @@ module ram_writer #(
     // 1 indicates that pixel in the triangle being ON 
     // START_DATA[0], START_DATA[1], and START_DATA[2] represents ON/OFF pixels, they are to be rendered at the same place, 
     // Just like 3 layers of images in the same space when you use Photoshop
-    const START_DATA = {16b0000000000000010, 16b0000001100000000, 16b0111111111111111}; 
+     const START_DATA = {16b0000000000000010, 16b0000001100000000, 16b0111111111111111}; 
   
     // replace this with row-col mapping to form better-looking shapes
     // right now, this transform START_DATA[i] into col, row ADDRESSES for the matrix pixels
-const ADDRESS_MAPPING = {
-    {6d9, 6d12},
-    {6d8, 6d9},
-    {6d8, 6d7},
-    {6d0, 6d63},
-    {6d0, 6d62},
-    {6d0, 6d49},
-    {6d0, 6d48},
-    {6d0, 6d47},
-    {6d0, 6d32},
-    {6d0, 6d31},
+  // debug mapping, use this to figure out which pixel is where and come up with COL_MAPPING in matrix_writer_4nscanrate_p10
+const ADDRESS_MAPPING_DEBUG = {
+    {6d6, 6d31},
+    {6d6, 6d30},
+    {6d5, 6d24},
+    {6d5, 6d23},
+    {6d5, 6d16},
+    {6d5, 6d15},
+    {6d5, 6d1},
+    {6d5, 6d0},
+    {6d3, 6d31},
+    {6d0, 6d30},
     {6d0, 6d24},
     {6d0, 6d23},
     {6d0, 6d16},
     {6d0, 6d15},
-    {6d0, 6d8},
+    {6d0, 6d1},
     {6d0, 6d0}
 };
-    
+  
+  // triangular shape 
+      const ADDRESS_MAPPING = {
+        {6d4, 6d0}, //unused
+        {6d4, 6d14},
+        {6d4, 6d12},
+        {6d4, 6d10},
+        {6d4, 6d8},
+        {6d4, 6d6},
+        {6d3, 6d13},
+        {6d3, 6d11},
+        {6d3, 6d9},
+        {6d3, 6d7},
+        {6d2, 6d12},
+        {6d2, 6d10},
+        {6d2, 6d8},
+        {6d1, 6d11},
+        {6d1, 6d9},
+        {6d0, 6d10}
+    };
     // the start data is 16 bit wide
     // each bit represents whether a certain pixel in the matrix is ON or OFF, positional 
     // this dff looks at the START_DATA[i] bit by bit, and use ADDRESS_MAPPING to find row, col address for the matrix for that bit 

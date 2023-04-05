@@ -10,6 +10,8 @@
     <component>simple_ram.v</component>
     <component>reset_conditioner.luc</component>
     <component>edge_detector.luc</component>
+    <src>matrix_writer_4nscanrate.luc</src>
+    <src>matrix_writer_4nscanrate_p10.luc</src>
     <component>button_conditioner.luc</component>
     <constraint lib="true">au.xdc</constraint>
     <constraint>custom.acf</constraint>
