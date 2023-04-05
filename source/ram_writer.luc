@@ -112,8 +112,6 @@ module ram_writer #(
         we_btm = b1;
         writer_state.d = writer_state.LOAD_WAIT;
         if (&bitloader.q == 1){
-            // advance bottom col for next time
-            data_bottom_col_address.d = data_bottom_col_address.q + 1;
             bitloader.d = 0;
             writer_state.d = writer_state.LOOP;
         }
@@ -122,6 +120,7 @@ module ram_writer #(
         //advance write address by 1
         bitloader.d = bitloader.q + 1;
         data_bottom_col_address.d = data_bottom_col_address.q + 1;
+        
         // advance row after bottom address has reach all 1
         if (&data_bottom_col_address.q){
           data_bottom_row_address.d = data_bottom_row_address.q + 1;
@@ -133,6 +132,8 @@ module ram_writer #(
         ready = 1;
         writer_state.d = writer_state.LOOP;
         if (reload){
+           // advance bottom col for next time
+            data_bottom_col_address.d = data_bottom_col_address.q + 1;
            // reset to load from bit 0 again
            bitloader.d = 0;
            data.d = new_data;
