@@ -65,8 +65,8 @@ module ram_writer #(
     dff data[DATA_SET][DATA_WIDTH](.clk(clk), .rst(rst)); 
 
   
-    dff data_col_address[$clog2(MATRIX_WIDTH)](#INIT(0),.clk(clk),.rst(rst));
-    dff data_row_address[ADDRESS_SIZE](#INIT(0),.clk(clk),.rst(rst));
+    dff data_bottom_col_address[$clog2(MATRIX_WIDTH)](#INIT(0),.clk(clk),.rst(rst));
+    dff data_bottom_row_address[ADDRESS_SIZE](#INIT(0),.clk(clk),.rst(rst));
   
    
  
@@ -92,8 +92,8 @@ module ram_writer #(
         row_address_top = ADDRESS_MAPPING[bitloader.q][1]; // ROW ADDRESS bits, e.g: 4 bits for 32x64 matrix (top half, bottom half)
         col_address_top = ADDRESS_MAPPING[bitloader.q][0];
           
-        row_address_btm = data_row_address.q;
-        col_address_btm = data_col_address.q;
+        row_address_btm = data_bottom_row_address.q;
+        col_address_btm = data_bottom_col_address.q;
         
         // color accordingly
         wd_top = b000;
@@ -119,7 +119,11 @@ module ram_writer #(
       writer_state.LOAD_WAIT:
         //advance write address by 1
         bitloader.d = bitloader.q + 1;
-        data_col_address.d = data_col_address.q + 1;
+        data_bottom_col_address.d = data_bottom_col_address.q + 1;
+        // advance row after bottom address has reach all 1
+        if (&data_bottom_col_address.q){
+          data_bottom_row_address.d = data_bottom_row_address.q + 1;
+        }
         writer_state.d = writer_state.LOAD_ADDRESS;
      
       writer_state.LOOP:
@@ -127,6 +131,8 @@ module ram_writer #(
         ready = 1;
         writer_state.d = writer_state.LOOP;
         if (reload){
+           // reset to load from bit 0 again
+           bitloader.d = 0;
            data.d = new_data;
            writer_state.d = writer_state.LOAD_ADDRESS;
         }
