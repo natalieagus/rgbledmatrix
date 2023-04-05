@@ -97,17 +97,20 @@ module ram_writer #(
         
         // color accordingly
         wd_top = b000;
+        wd_btm = b111; // white
         if (data.q[2][bitloader.q] == 1){ // START_DATA[2] is rendered on top of START_DATA[1] and START_DATA[0]
             wd_top = b100; // the third triangle BLUE pixels, takes the most precedence
+            wd_btm = b100;
         }
         else if (data.q[1][bitloader.q] == 1){
             wd_top = b010; // the second triangle GREEN pixels
+            wd_btm = b010;
         }
         else if (data.q[0][bitloader.q] == 1){ // START_DATA[0] is rendered at the bottom
             wd_top = b001; // the first triangle has RED pixels, takes the least precedence
+            wd_btm = b001;
         }
   
-        wd_btm = b100;
         we_top = b1;
         we_btm = b1;
         writer_state.d = writer_state.LOAD_WAIT;
