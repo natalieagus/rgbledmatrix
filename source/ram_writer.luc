@@ -34,19 +34,14 @@ module ram_writer #(
     // 1 indicates that pixel in the triangle being ON 
     // START_DATA[0], START_DATA[1], and START_DATA[2] represents ON/OFF pixels, they are to be rendered at the same place, 
     // Just like 3 layers of images in the same space when you use Photoshop
-    const START_DATA = {16b0000000000000010, 16b0000001100000000, 16b0111111111111111}; 
+    const START_DATA = {16b1000000000000010, 16b0000001100000000, 16b0111111111111111}; 
   
     // replace this with row-col mapping to form better-looking shapes
     // right now, this transform START_DATA[i] into col, row ADDRESSES for the matrix pixels
+
+  
     const ADDRESS_MAPPING = {
-        {6d0, 6d0}, //unused
-        {6d9, 6d14},
         {6d9, 6d12},
-        {6d9, 6d10},
-        {6d9, 6d8},
-        {6d9, 6d6},
-        {6d8, 6d13},
-        {6d8, 6d11},
         {6d8, 6d9},
         {6d8, 6d7},
         {6d7, 6d12},
@@ -54,7 +49,14 @@ module ram_writer #(
         {6d7, 6d8},
         {6d6, 6d11},
         {6d6, 6d9},
-        {6d5, 6d10}
+        {6d5, 6d10},
+        {6d8, 6d8},
+        {6d5, 6d7},
+        {6d4, 6d4},
+        {6d1, 6d1},
+        {6d1, 6d0},
+        {6d0, 6d1},
+        {6d0, 6d0}
     };
     
     // the start data is 16 bit wide
@@ -65,8 +67,8 @@ module ram_writer #(
     dff data[DATA_SET][DATA_WIDTH](.clk(clk), .rst(rst)); 
 
   
-    dff data_col_address[$clog2(MATRIX_WIDTH)](#INIT(0),.clk(clk),.rst(rst));
-    dff data_row_address[ADDRESS_SIZE](#INIT(0),.clk(clk),.rst(rst));
+    dff data_bottom_col_address[$clog2(MATRIX_WIDTH)](#INIT(0),.clk(clk),.rst(rst));
+    dff data_bottom_row_address[ADDRESS_SIZE](#INIT(0),.clk(clk),.rst(rst));
   
    
  
@@ -92,26 +94,32 @@ module ram_writer #(
         row_address_top = ADDRESS_MAPPING[bitloader.q][1]; // ROW ADDRESS bits, e.g: 4 bits for 32x64 matrix (top half, bottom half)
         col_address_top = ADDRESS_MAPPING[bitloader.q][0];
           
-        row_address_btm = data_row_address.q;
-        col_address_btm = data_col_address.q;
+        row_address_btm = data_bottom_row_address.q;
+        col_address_btm = data_bottom_col_address.q;
         
         // color accordingly
         wd_top = b000;
+        wd_btm = b111;
         if (data.q[2][bitloader.q] == 1){ // START_DATA[2] is rendered on top of START_DATA[1] and START_DATA[0]
             wd_top = b100; // the third triangle BLUE pixels, takes the most precedence
+            wd_btm = b100;
         }
         else if (data.q[1][bitloader.q] == 1){
             wd_top = b010; // the second triangle GREEN pixels
+          wd_btm = b010;
         }
         else if (data.q[0][bitloader.q] == 1){ // START_DATA[0] is rendered at the bottom
             wd_top = b001; // the first triangle has RED pixels, takes the least precedence
+          wd_btm = b001;
         }
   
-        wd_btm = b100;
+        
         we_top = b1;
         we_btm = b1;
         writer_state.d = writer_state.LOAD_WAIT;
         if (&bitloader.q == 1){
+            // advance column 
+            data_bottom_col_address.d = data_bottom_col_address.q + 1;
             bitloader.d = 0;
             writer_state.d = writer_state.LOOP;
         }
@@ -119,7 +127,11 @@ module ram_writer #(
       writer_state.LOAD_WAIT:
         //advance write address by 1
         bitloader.d = bitloader.q + 1;
-        data_col_address.d = data_col_address.q + 1;
+        data_bottom_col_address.d = data_bottom_col_address.q + 1;
+        //advance bottom row if col address has reached all 1 
+        if (&data_bottom_col_address.q){
+          data_bottom_row_address.d = data_bottom_row_address.q + 1;
+        }
         writer_state.d = writer_state.LOAD_ADDRESS;
      
       writer_state.LOOP:
@@ -128,6 +140,7 @@ module ram_writer #(
         writer_state.d = writer_state.LOOP;
         if (reload){
            data.d = new_data;
+           bitloader.d = 0;
            writer_state.d = writer_state.LOAD_ADDRESS;
         }
   }
