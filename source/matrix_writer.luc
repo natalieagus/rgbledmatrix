@@ -95,10 +95,7 @@ module matrix_writer #(
     if (state.q == b00){ // START state
       latch_blank.d = b01; // latch off, blank on, begin 
       current_address.d = ADDRESS_SIZEx{b1}; // start from address 1111 
-      
-      // start giving address to the ram 
-      col_index = led_bit_counter.q[$clog2(MATRIX_WIDTH)-1:0]; // column changes per cycle to load row led (until 64)
-      row_index = 0; // starts at address zero
+     
       state.d = b01;
     }
     
@@ -109,7 +106,7 @@ module matrix_writer #(
       // off clock when changing data 
       sclk.d = 0;
       
-      // load data for next column
+      // give address for next column
       col_index = led_bit_counter.q[$clog2(MATRIX_WIDTH)-1:0]; // column changes per cycle to load row led (until 64)
       row_index = current_address.q + 1; // plus one because we are loading next row, while prev row is still being displayed
      
@@ -137,7 +134,7 @@ module matrix_writer #(
       state.d = b10;
 
       latch_blank.d = b11; // latch on, blank on
-      current_address.d = current_address.q + 1; // advance address 
+      current_address.d = current_address.q + 1; // advance row address 
       
       sclk.d = 0; // off latch clock 
       led_bit_counter.d = 0; // reset shift bit counter to start at 0 again
@@ -147,12 +144,8 @@ module matrix_writer #(
    // in the next sclk_counter cycle, when sclk contains all 1, then DISPLAY
     else if(sclk_counter.q == (DIV)x{b1} && state.q == b10){
       latch_blank.d = b00; //latch off, blank off
+      
       // change state to load again
-      
-      // give the appropriate read address now to the ram, next row, first column 
-      col_index = led_bit_counter.q[$clog2(MATRIX_WIDTH)-1:0]; // column changes per cycle to load row led (until 64)
-      row_index = current_address.q + 1; // starts at address zero since current_address is still 0 here
-      
       state.d = b01;
     }
 
