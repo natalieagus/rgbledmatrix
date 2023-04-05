@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="RGBLEDMatrix" board="Alchitry Au" language="Lucid" version="3">
   <files>
-    <src>matrix_writer.luc</src>
     <component>simple_dual_ram.v</component>
     <src top="true">au_top.luc</src>
     <src>matrix_ram.luc</src>
