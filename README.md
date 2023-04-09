@@ -72,3 +72,9 @@ You may checkout the branch `matrix-with-ram` to see how we use a `ram_writer` t
 Here's what you should see when you run it on 64x64 matrix:
 
 ![matrix](images/matrix.png)
+
+## 4/N Scanrate
+
+You may checkout the branch `matrix-with-ram-scanrate-1-4` to make it work with 4/N scanrate, while N is the height (shorter side) of the matrix.
+
+For instance, a 32x16 matrix with 1:4 scanrate (instead of 1:8).
